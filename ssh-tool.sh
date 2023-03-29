@@ -2,6 +2,11 @@
 # To setup, add "$HOME/.ssh/ssh-tools.sh" to
 # /etc/bash.bashrc or ~/.bashrc
 
+# add flags as opposed to commands
+# add ablity to backup and restore setup
+
+version="0.0.1"
+
 function ssh-which() {
   if [ $# -ge 1 ]; then
     echo "[usage] ssh-which"
