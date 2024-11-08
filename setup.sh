@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Source the ssh-tool.sh to access its functions and variables
+source ./ssh-tool.sh
+
 function Echo_Color(){
     case $1 in
         r* | R* )
@@ -15,74 +18,69 @@ function Echo_Color(){
         COLOR='\033[0;34m'
         ;;
         *)
-        echo "$COLOR Wrong COLOR keyword!\033[0m" 
+        COLOR='\033[0m' # Default color
+        echo -e "$COLOR Wrong COLOR keyword!"
+        return
         ;;
-        esac
-        echo -e "$COLOR$2\033[0m"
-    }
+    esac
+    echo -e "$COLOR$2\033[0m"
+}
 
-# ! Adding verison 
-# source ssh-tool.sh
+ConfigFile="$HOME/.ssh/config"
 
-# verlte() {
-#     [  "$1" = "`echo -e "$1\n$2" | sort -V | head -n1`" ]
-# }
+# Check if the config file exists, if not create it
+if [ ! -f "$ConfigFile" ]; then
+    Echo_Color y "Config file doesn't exist. Setting up initial SSH config..."
 
-# if [verlte 2.5.7 2.5.6 && echo "yes" || echo "no" # no]; then
+    # Create the SSH config file with default settings for GitHub
+    {
+        echo "Host github.com"
+        echo "    User git"
+        echo "    IdentityFile ~/.ssh/your_profile/id_rsa" # Update this line dynamically later
+    } > "$ConfigFile"
 
-# fi
-
-if [ ! -r $version -a ! -s $ConfigFile ] ; then
-echo " Config file Setup Doesn't Exit...."
-exit 11
+    Echo_Color g "SSH config file created at $ConfigFile."
+else
+    Echo_Color y "Config file already exists at $ConfigFile."
 fi
-
-username=`grep -w "username" $ConfigFile | cut -d"=" -f2`
 
 case $SHELL in
     *zsh )
     profile=~/.zshrc
-    logout_profile=~/.zlogout
     ;;
     *bash )
     profile=~/.bashrc
-    logout_profile=~/.bash_logout
     ;;
     * )
-    Echo_Color r "Unknown shell, need to manually add config on your shell profile!!"
-    profile='unknown'
-    logout_profile='unknown'
+    Echo_Color r "Unknown shell, need to manually add config to your shell profile!!"
+    exit 1
     ;;
 esac
 
-ssh_config='source $HOME/.ssh/.ssh-tool'
+ssh_config='source $HOME/.ssh/ssh-tool.sh'
 
-cp ./ssh-tool.sh ~/.ssh/.ssh-tool
+# Copy ssh-tool.sh to .ssh
+cp ./ssh-tool.sh ~/.ssh/ssh-tool.sh
 
-if [ "$profile" = "unknown" ]; then
-    echo 'Paste the information down below to your profile:'
-    Echo_Color y "$ssh_config\n"
+# Check and append to profile
+if ! grep -qF "$ssh_config" "$profile"; then
+    echo "$ssh_config" >> "$profile"
+    Echo_Color g "SSH tool has been installed in $profile!"
 else
-    if [ "$(grep -xn "$ssh_config" $profile)" != "" ]; then
-        printf "$ssh_config\n" >> $profile
-        Echo_Color g "You have updated your ssh-tool already installed in $profile!"
-    else
-        printf "$ssh_config\n" >> $profile
-    fi
+    Echo_Color y "SSH tool already exists in $profile."
 fi
 
-#! what does this do?
-if ! [ -f ~/.ssh/.ssh-tool ]; then
-    printf "" >> ~/.ssh/.ssh-tool
+# Create the SSH tool file if it doesn't exist
+if [ ! -f ~/.ssh/ssh-tool.sh ]; then
+    touch ~/.ssh/ssh-tool.sh
 fi
 
-source $HOME/.ssh/.ssh-tool
-read -p "Do you wish to create new profile? (Y|n)  " -n 1 -r
+# Prompt to create a new profile
+read -p "Do you wish to create a new profile? (Y|n)  " -n 1 -r
 echo
-if [[ $REPLY =~ ^[Yy]$ ]]
-    then
+if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo "Creating..."
-    ssh-create    
+    ssh-create
 fi
 
-echo "Done installing! Enjoy by creating new terminal instance."
+echo "Done installing! Enjoy by creating a new terminal instance."
