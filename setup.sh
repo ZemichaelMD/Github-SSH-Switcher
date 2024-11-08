@@ -75,6 +75,24 @@ if [ ! -f ~/.ssh/ssh-tool.sh ]; then
     touch ~/.ssh/ssh-tool.sh
 fi
 
+source "$HOME/.ssh/ssh-tool.sh"
+
+PROFILE_DIR="$HOME/.ssh/profiles"
+
+# Ensure profiles directory exists
+mkdir -p "$PROFILE_DIR"
+
+# Check if there are profiles already
+profiles=($(find "$PROFILE_DIR" -maxdepth 1 -type d -exec basename {} \; | tail -n +2))
+if [ ${#profiles[@]} -eq 0 ]; then
+  echo "No profiles available to switch to. Would you like to create one? (Y/n)"
+  read -r response
+  if [[ $response =~ ^[Yy]$ ]]; then
+    ssh-create
+  fi
+  return 1
+fi
+
 # Prompt to create a new profile
 read -p "Do you wish to create a new profile? (Y|n)  " -n 1 -r
 echo
@@ -83,4 +101,4 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     ssh-create
 fi
 
-echo "Done installing! Enjoy by creating a new terminal instance."
+echo "Done installing! Enjoy SSH Tools for Github."
